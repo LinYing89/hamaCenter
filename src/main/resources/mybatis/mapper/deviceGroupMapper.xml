@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper
+        namespace="com.bairock.iot.hamaCenter.mapper.DeviceGroupMapper">
+
+    <resultMap type="com.bairock.iot.hamalib.user.DevGroup" id="deviceGroupMap">
+        <id column="id" property="id"/>
+        <result column="group_name" property="groupName"/>
+        <result column="password" property="password"/>
+        <result column="pet_name" property="petName"/>
+        <result column="user_id" property="userId"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="device">
+        insert into dev_group (
+        id,
+        group_name,
+        password,
+        pet_name,
+        user_id
+        )
+        values (
+        #{id},
+        #{groupName},
+        #{password},
+        #{petName},
+        #{userId}
+        )
+    </insert>
+
+    <select id="findById" resultMap="deviceGroupMap">
+        SELECT * FROM dev_group
+        WHERE id = #{id}
+    </select>
+
+    <select id="findByUserId" resultMap="deviceGroupMap">
+        SELECT * FROM dev_group
+        WHERE user_id = #{userId}
+    </select>
+
+    <select id="findByNameAndUserId" resultMap="deviceGroupMap">
+        SELECT * FROM dev_group
+        WHERE
+        group_name = #{groupName}
+        AND
+        user_id = #{userId}
+    </select>
+
+    <select id="findByNameAndPsdAndUserId" resultMap="deviceGroupMap">
+        SELECT * FROM dev_group
+        WHERE
+        group_name = #{groupName}
+        AND
+        password = #{password}
+        AND
+        user_id = #{userId}
+    </select>
+
+    <update id="update">
+        UPDATE dev_group SET
+        group_name = #{groupName},
+        password = #{password},
+        pet_name = #{petName}
+        WHERE
+        id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM dev_group WHERE id = #{id}
+    </delete>
+</mapper>

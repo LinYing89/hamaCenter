@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper
+        namespace="com.bairock.iot.hamaCenter.mapper.CollectPropertyMapper">
+
+    <resultMap type="com.bairock.iot.hamalib.device.devcollect.CollectProperty" id="collectPropertyMap">
+        <id column="id" property="id"/>
+        <result column="dev_collect_id" property="devCollectId"/>
+        <result column="crest_value" property="crestValue"/>
+        <result column="crest_refer_value" property="crestReferValue"/>
+        <result column="least_value" property="leastValue"/>
+        <result column="least_refer_value" property="leastReferValue"/>
+        <result column="current_value" property="currentValue"/>
+        <result column="calibration_value" property="calibrationValue"/>
+        <result column="percent" property="percent"/>
+        <result column="formula" property="formula"/>
+        <result column="unit_symbol" property="unitSymbol"/>
+        <result column="collect_src" property="collectSrc"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.bairock.iot.hamalib.device.devcollect.CollectProperty">
+        insert into collect_property (
+        id,
+        dev_collect_id,
+        crest_value,
+        crest_refer_value,
+        least_value,
+        least_refer_value,
+        current_value,
+        calibration_value,
+        percent,
+        formula,
+        unit_symbol,
+        collect_src
+        )
+        values (
+        #{id},
+        #{devCollectId},
+        #{crestValue},
+        #{crestReferValue},
+        #{leastValue},
+        #{leastReferValue},
+        #{currentValue},
+        #{calibrationValue},
+        #{percent},
+        #{formula},
+        #{unitSymbol},
+        #{collectSrc}
+        )
+    </insert>
+
+    <select id="findById" resultMap="collectPropertyMap">
+        SELECT * FROM collect_property
+        WHERE id = #{id}
+    </select>
+
+    <select id="findByDevCollectId" resultMap="collectPropertyMap">
+        SELECT * FROM collect_property
+        WHERE
+        dev_collect_id = #{devCollectId}
+    </select>
+
+    <update id="update">
+        UPDATE collect_property
+        SET
+        crest_value = #{crestValue},
+        crest_refer_value = #{crestReferValue},
+        least_value = #{leastValue},
+        least_refer_value = #{leastReferValue},
+        current_value = #{currentValue},
+        calibration_value = #{calibrationValue},
+        percent = #{percent},
+        formula = #{formula},
+        unit_symbol = #{unitSymbol},
+        collect_src = #{collectSrc},
+        WHERE
+        id = #{id}
+    </update>
+
+    <delete id="deleteByDevCollectId">
+        DELETE FROM collect_property
+        WHERE
+        id = #{id}
+    </delete>
+</mapper>

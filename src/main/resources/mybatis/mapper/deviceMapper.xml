@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper
+        namespace="com.bairock.iot.hamaCenter.mapper.DeviceMapper">
+
+    <resultMap type="com.bairock.iot.hamalib.device.Device" id="deviceMap">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="dev_group_id" property="devGroupId"/>
+        <result column="pid" property="pid"/>
+        <result column="main_code" property="mainCode"/>
+        <result column="sub_code" property="subCode"/>
+        <result column="alias" property="alias"/>
+        <result column="gear" property="gear"/>
+        <result column="status" property="status"/>
+        <result column="ctrl_model" property="ctrlModel"/>
+        <result column="sort" property="sort"/>
+        <result column="visibility" property="visibility"/>
+        <result column="value" property="value"/>
+        <discriminator javaType="string" column="main_code">
+            <case value="A1" resultType="Coordinator"/>
+            <case value="Ax" resultType="Coordinator"/>
+            <case value="R1" resultType="GuaguaMouth"/>
+            <case value="w1" resultType="DevAlarm"/>
+            <case value="y1" resultType="Pressure"/>
+            <case value="bx" resultType="DevCollectSignalContainer"/>
+            <case value="b1" resultType="DevCollectSignal"/>
+            <case value="x1" resultType="DevCollectClimateContainer"/>
+            <case value="z1" resultType="DevAlarm"/>
+            <case value="e1" resultType="Temperature"/>
+            <case value="e2" resultType="Humidity"/>
+            <case value="e3" resultType="Formaldehyde"/>
+            <case value="B1" resultType="DevSwitchOneRoad"/>
+            <case value="B2" resultType="DevSwitchTwoRoad"/>
+            <case value="B3" resultType="DevSwitchThreeRoad"/>
+            <case value="Bx" resultType="DevSwitchXRoad"/>
+            <case value="C1" resultType="DevSwitchThreeState"/>
+            <case value="D1" resultType="RemoterContainer"/>
+            <case value="V1" resultType="DevParam"/>
+            <case value="V2" resultType="Counter"/>
+            <case value="E1" resultType="DevSocket"/>
+            <case value="3" resultType="Curtain"/>
+            <case value="1" resultType="Television"/>
+            <case value="7" resultType="CustomRemoter"/>
+            <case value="0" resultType="SubDev"/>
+        </discriminator>
+    </resultMap>
+
+    <insert id="insert" parameterType="device">
+        insert into device (
+        id,
+        name,
+        dev_group_id,
+        pid,
+        main_code,
+        sub_code,
+        alias,
+        gear,
+        status,
+        ctrl_model,
+        sort,
+        visibility,
+        value
+        )
+        values (
+        #{id},
+        #{name},
+        #{devGroupId},
+        #{pid},
+        #{mainCode},
+        #{subCode},
+        #{alias},
+        #{gear},
+        #{status},
+        #{ctrlModel},
+        #{sort},
+        #{visibility},
+        #{value}
+        )
+    </insert>
+
+    <select id="findById" resultMap="deviceMap">
+        SELECT * FROM device
+        WHERE id = #{id}
+    </select>
+
+    <select id="findByGroupId" resultMap="deviceMap">
+        SELECT * FROM device
+        WHERE dev_group_id = #{devGroupId}
+        AND
+        pid IS NULL
+    </select>
+
+    <select id="findByPid" resultMap="deviceMap">
+        SELECT * FROM device
+        WHERE pid = #{pid}
+    </select>
+
+    <delete id="deleteById">
+        DELETE FROM device WHERE id = #{id}
+    </delete>
+
+    <delete id="deleteByDevGroupId">
+        DELETE FROM device WHERE dev_group_id = #{devGroupId}
+    </delete>
+</mapper>

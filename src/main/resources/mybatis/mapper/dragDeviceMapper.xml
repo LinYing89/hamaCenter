@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper
+        namespace="com.bairock.iot.hamaCenter.mapper.DragDeviceMapper">
+
+    <resultMap type="com.bairock.iot.hamalib.data.DragDevice" id="dragDeviceMap">
+        <id column="id" property="id"/>
+        <result column="device_id" property="deviceId"/>
+        <result column="layoutx" property="layoutx"/>
+        <result column="layouty" property="layouty"/>
+        <result column="image_type" property="imageType"/>
+        <result column="image_name" property="imageName"/>
+        <result column="image_width" property="imageWidth"/>
+        <result column="image_height" property="imageHeight"/>
+        <result column="rotate" property="rotate"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.bairock.iot.hamalib.data.DragDevice">
+        insert into drag_device (
+        id,
+        device_id,
+        layoutx,
+        layouty,
+        image_type,
+        image_name,
+        image_width,
+        image_height,
+        rotate
+        )
+        values (
+        #{id},
+        #{deviceId},
+        #{layoutx},
+        #{layouty},
+        #{imageType},
+        #{imageName},
+        #{imageWidth},
+        #{imageHeight},
+        #{rotate}
+        )
+    </insert>
+
+    <select id="findByDeviceId" resultMap="dragDeviceMap">
+        SELECT * FROM drag_device
+        WHERE device_id = #{deviceId}
+    </select>
+
+    <update id="update">
+        UPDATE drag_device
+        SET
+        layoutx = #{layoutx},
+        layouty = #{layouty},
+        image_type = #{imageType},
+        image_name = #{imageName},
+        image_width = #{imageWidth},
+        image_height = #{imageHeight},
+        rotate = #{rotate}
+        WHERE
+        id = #{id}
+    </update>
+
+    <delete id="deleteByDeviceId">
+        DELETE FROM drag_device
+        WHERE
+        device_id = #{deviceId}
+    </delete>
+</mapper>
