@@ -1,5 +1,14 @@
 package com.bairock.iot.hamaCenter.communication;
 
+import com.bairock.iot.hamalib.communication.DevChannelBridge;
+import com.bairock.iot.hamalib.communication.DevChannelBridgeHelper;
+import com.bairock.iot.hamalib.communication.DeviceChannelBridge;
+import com.bairock.iot.hamalib.communication.MessageAnalysiser;
+import com.bairock.iot.hamalib.device.*;
+import com.bairock.iot.hamalib.device.devcollect.DevCollect;
+import com.bairock.iot.hamalib.device.devswitch.SubDev;
+import com.bairock.iot.hamalib.user.DevGroup;
+import com.bairock.iot.hamalib.user.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,19 +18,6 @@ import com.bairock.iot.hamaCenter.service.DeviceService;
 import com.bairock.iot.hamaCenter.service.UserService;
 import com.bairock.iot.hamaCenter.test.DeviceMsg;
 import com.bairock.iot.hamaCenter.test.DeviceMsgTestService;
-import com.bairock.iot.intelDev.communication.DevChannelBridge;
-import com.bairock.iot.intelDev.communication.DevChannelBridgeHelper;
-import com.bairock.iot.intelDev.communication.DeviceChannelBridge;
-import com.bairock.iot.intelDev.communication.MessageAnalysiser;
-import com.bairock.iot.intelDev.device.CtrlModel;
-import com.bairock.iot.intelDev.device.DevHaveChild;
-import com.bairock.iot.intelDev.device.DevStateHelper;
-import com.bairock.iot.intelDev.device.Device;
-import com.bairock.iot.intelDev.device.OrderHelper;
-import com.bairock.iot.intelDev.device.devcollect.DevCollect;
-import com.bairock.iot.intelDev.device.devswitch.SubDev;
-import com.bairock.iot.intelDev.user.DevGroup;
-import com.bairock.iot.intelDev.user.User;
 
 public class MyDevChannelBridge extends DeviceChannelBridge {
 
@@ -176,25 +172,25 @@ public class MyDevChannelBridge extends DeviceChannelBridge {
         if (null == getDevice()) {
             // 尝试获取用户名、组名
             String[] msgs = codingState[1].split(":");
-            String userid = null;
+            String username = null;
             String groupName = null;
             for (String str : msgs) {
                 if (str.startsWith("u")) {
-                    userid = str.substring(1);
+                    username = str.substring(1);
                 } else if (str.startsWith("g")) {
                     groupName = str.substring(1);
                 }
             }
 
-            if (null != coding && null != userid && null != groupName) {
-                User user = userService.findByUserid(userid);
+            if (null != coding && null != username && null != groupName) {
+                User user = userService.findByUsername(username);
                 if (null == user) {
-                    logger.error("no username : " + userid);
+                    logger.error("no username : " + username);
                     unknowUserInfo();
                     return;
                 }
 //				DevGroup group = user.findDevGroupByName(groupName);
-                DevGroup group = devGroupService.findByNameAndUsername(groupName, userid);
+                DevGroup group = devGroupService.findByNameAndUserId(groupName, user.getId());
                 if (null == group) {
                     logger.error("no groupname : " + groupName);
                     unknowUserInfo();
@@ -209,7 +205,7 @@ public class MyDevChannelBridge extends DeviceChannelBridge {
                     Device parent = dev.findSuperParent();
                     parent = deviceService.findById(parent.getId());
                     setDevice(parent);
-                    dev.setUsername(userid);
+                    dev.setUsername(username);
                     dev.setDevGroupName(groupName);
                     // 重新获取缓存中的数据, 使系统中设备对象唯一
                     dev = ((DevHaveChild) parent).findDevByCoding(coding);
@@ -217,10 +213,10 @@ public class MyDevChannelBridge extends DeviceChannelBridge {
                     // 重新获取缓存中的数据, 使系统中设备对象唯一
                     dev = deviceService.findById(dev.getId());
                     setDevice(dev);
-                    dev.setUsername(userid);
+                    dev.setUsername(username);
                     dev.setDevGroupName(groupName);
                 }
-                this.userName = userid;
+                this.userName = username;
                 this.groupName = groupName;
                 getDevice().setCtrlModel(CtrlModel.REMOTE);
                 setDeviceListener(getDevice());
@@ -267,7 +263,7 @@ public class MyDevChannelBridge extends DeviceChannelBridge {
     }
 
     private void setDeviceToZhangChang(Device dev) {
-        dev.setDevStateId(DevStateHelper.DS_ZHENG_CHANG);
+        dev.setStatus(DevStateHelper.DS_ZHENG_CHANG);
 //		if (dev instanceof DevHaveChild) {
 //			for (Device device : ((DevHaveChild) dev).getListDev()) {
 //				setDeviceToZhangChang(device);
@@ -288,7 +284,7 @@ public class MyDevChannelBridge extends DeviceChannelBridge {
     private void setDeviceListener(Device device) {
 //		device.setCtrlModel(CtrlModel.UNKNOW);
         if (device.getStOnStateChangedListener().isEmpty()) {
-            device.setDevStateId(DevStateHelper.DS_UNKNOW);
+            device.setStatus(DevStateHelper.DS_UNKNOW);
             device.addOnStateChangedListener(myOnStateChangedListener);
         }
         if (device.getStOnCtrlModelChanged().isEmpty()) {
@@ -331,8 +327,8 @@ public class MyDevChannelBridge extends DeviceChannelBridge {
 //			return null;
 //		}
         Device rootDev = device.findSuperParent();
-        String groupName = rootDev.getDevGroup().getName();
-        String userName = rootDev.getDevGroup().getUser().getUserid();
+        String groupName = rootDev.getDevGroup().getGroupName();
+        String userName = rootDev.getDevGroup().getUser().getUsername();
         DevChannelBridge d = DevChannelBridgeHelper.getIns().getDevChannelBridge(rootDev.getCoding(), userName,
                 groupName);
         if (null != d) {

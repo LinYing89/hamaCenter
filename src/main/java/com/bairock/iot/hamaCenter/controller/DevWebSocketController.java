@@ -1,5 +1,12 @@
 package com.bairock.iot.hamaCenter.controller;
 
+import com.bairock.iot.hamalib.communication.DevChannelBridge;
+import com.bairock.iot.hamalib.device.CtrlModel;
+import com.bairock.iot.hamalib.device.DevStateHelper;
+import com.bairock.iot.hamalib.device.Device;
+import com.bairock.iot.hamalib.device.IStateDev;
+import com.bairock.iot.hamalib.order.DeviceOrder;
+import com.bairock.iot.hamalib.order.OrderType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,13 +18,6 @@ import com.bairock.iot.hamaCenter.communication.MyDevChannelBridge;
 import com.bairock.iot.hamaCenter.communication.PadChannelBridgeHelper;
 import com.bairock.iot.hamaCenter.data.webData.WebUserInfo;
 import com.bairock.iot.hamaCenter.service.DeviceService;
-import com.bairock.iot.intelDev.communication.DevChannelBridge;
-import com.bairock.iot.intelDev.device.CtrlModel;
-import com.bairock.iot.intelDev.device.DevStateHelper;
-import com.bairock.iot.intelDev.device.Device;
-import com.bairock.iot.intelDev.device.IStateDev;
-import com.bairock.iot.intelDev.order.DeviceOrder;
-import com.bairock.iot.intelDev.order.OrderType;
 
 /**
  * 组的设备页面websocket controller
@@ -48,8 +48,7 @@ public class DevWebSocketController {
 	
 	/**
 	 * 网页发出的控制命令 控制命令相当于档位切换命令, 不需要单独发送档位命令
-	 * 
-	 * @param ctrlDev
+	 *
 	 */
 	@MessageMapping("/ctrlDev")
 	public void ctrlDev(DeviceOrder order) {

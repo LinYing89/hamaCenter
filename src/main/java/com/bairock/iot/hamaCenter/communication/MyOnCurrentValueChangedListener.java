@@ -1,20 +1,20 @@
 package com.bairock.iot.hamaCenter.communication;
 
+import com.bairock.iot.hamalib.device.CtrlModel;
+import com.bairock.iot.hamalib.device.Device;
+import com.bairock.iot.hamalib.device.devcollect.CollectProperty;
+import com.bairock.iot.hamalib.device.devcollect.DevCollect;
+import com.bairock.iot.hamalib.order.DeviceOrder;
+import com.bairock.iot.hamalib.order.OrderType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.bairock.iot.hamaCenter.utils.Util;
 import com.bairock.iot.hamaCenter.data.webData.WebDevValue;
 import com.bairock.iot.hamaCenter.service.DeviceBroadcastService;
-import com.bairock.iot.intelDev.device.CtrlModel;
-import com.bairock.iot.intelDev.device.Device;
-import com.bairock.iot.intelDev.device.devcollect.CollectProperty.OnCurrentValueChangedListener;
-import com.bairock.iot.intelDev.order.DeviceOrder;
-import com.bairock.iot.intelDev.order.OrderType;
-import com.bairock.iot.intelDev.device.devcollect.DevCollect;
 
 @Component
-public class MyOnCurrentValueChangedListener implements OnCurrentValueChangedListener {
+public class MyOnCurrentValueChangedListener implements CollectProperty.OnCurrentValueChangedListener {
 
 	@Autowired
 	private DeviceBroadcastService deviceService;

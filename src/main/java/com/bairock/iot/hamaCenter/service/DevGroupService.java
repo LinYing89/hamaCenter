@@ -7,23 +7,23 @@ import java.util.UUID;
 import com.bairock.iot.hamaCenter.exception.MyException;
 import com.bairock.iot.hamaCenter.mapper.DeviceGroupMapper;
 import com.bairock.iot.hamaCenter.utils.Result;
-import com.bairock.iot.hamaCenter.utils.ResultEnum;
+import com.bairock.iot.hamaCenter.utils.ResultUtil;
 import com.bairock.iot.hamalib.communication.DevChannelBridge;
+import com.bairock.iot.hamalib.communication.DevChannelBridgeHelper;
 import com.bairock.iot.hamalib.data.DragConfig;
 import com.bairock.iot.hamalib.data.DragDevice;
+import com.bairock.iot.hamalib.device.DevHaveChild;
 import com.bairock.iot.hamalib.device.Device;
 import com.bairock.iot.hamalib.device.devcollect.DevCollect;
+import com.bairock.iot.hamalib.linkage.LinkageHolder;
 import com.bairock.iot.hamalib.user.DevGroup;
-import com.bairock.iot.hamalib.user.User;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 
 import com.bairock.iot.hamaCenter.communication.MyDevChannelBridge;
 import com.bairock.iot.hamaCenter.communication.PadChannelBridge;
 import com.bairock.iot.hamaCenter.communication.PadChannelBridgeHelper;
 import com.bairock.iot.hamaCenter.Config;
-import com.bairock.iot.hamaCenter.repository.GroupRepository;
 
 @Service
 public class DevGroupService {
@@ -42,6 +42,10 @@ public class DevGroupService {
 	@Autowired
 	private Config config;
 
+	public int insert(DevGroup group) {
+		return deviceGroupMapper.insert(group);
+	}
+
 	public DevGroup findById(String id) {
 		return deviceGroupMapper.findById(id);
 	}
@@ -54,10 +58,12 @@ public class DevGroupService {
 		return deviceGroupMapper.findByNameAndUserId(name, userId);
 	}
 
-	public int insert(DevGroup group) {
-		group.setId(UUID.randomUUID().toString());
-		return deviceGroupMapper.insert(group);
+	public DevGroup findByUsernameAndDevGroupNameAndDevGroupPassword(String username, String deviceGroupName, String deviceGroupPassword){
+		Long userId = userService.findIdByUsername(username);
+		return deviceGroupMapper.findByUserIdAndDevGroupNameAndDevGroupPassword(userId, deviceGroupName, deviceGroupPassword);
 	}
+
+
 
 	public int update(DevGroup group) {
 		return deviceGroupMapper.update(group);
@@ -120,13 +126,11 @@ public class DevGroupService {
         return dragConfigService.findByDevGroupId(devGroupId);
 	}
 	
-	public Result<Object> groupUpload(DevGroup groupUpload){
+	public Result<?> groupUpload(DevGroup groupUpload){
 		Result<Object> result = new Result<>();
-		DevGroup groupDb = groupRepository.findByNameAndUserid(groupUpload.getName(), groupUpload.getUserid());
+		DevGroup groupDb = deviceGroupMapper.findByNameAndUserId(groupUpload.getGroupName(), groupUpload.getUserId());
 		if(null == groupDb) {
-			result.setCode(ResultEnum.ERR_USERNAME.getCode());
-			result.setMsg(ResultEnum.ERR_USERNAME.getMessage());
-			return result;
+			return ResultUtil.error("用户名或组名错误");
 		}
 		
 		List<Device> listOldDevice = new ArrayList<>(groupDb.getListDevice());
@@ -150,7 +154,7 @@ public class DevGroupService {
 			groupDb.getListLinkageHolder().add(h);
 		}
 		groupDb.getListLinkageHolder().addAll(groupUpload.getListLinkageHolder());
-		groupRepository.saveAndFlush(groupDb);
+		deviceGroupMapper.update(groupDb);
 		
 		//移除被删除设备的缓存
 		for(Device dev : listOldDevice) {
@@ -161,7 +165,7 @@ public class DevGroupService {
 			MyDevChannelBridge myBridge = (MyDevChannelBridge)bridge;
 			//找到已连接的设备, 并且用户信息一致的设备链接, 重新从缓存中获取设备
 			if(null != myBridge.getUserName() && null != myBridge.getGroupName()) {
-				if(myBridge.getUserName().equals(groupUpload.getUserid()) && myBridge.getGroupName().equals(groupUpload.getName())){
+				if(myBridge.getUserName().equals(groupUpload.getUser().getUsername()) && myBridge.getGroupName().equals(groupUpload.getGroupName())){
 					Device oldDev = bridge.getDevice();
 					if(null != oldDev) {
 						Device dev = deviceService.findById(oldDev.getId());
@@ -172,7 +176,7 @@ public class DevGroupService {
 		}
 		
 		//找到所有已在pad链接中保存的设备对象, 重新从缓存中获取
-		for(PadChannelBridge bridge : PadChannelBridgeHelper.getIns().getListPadChannelBridge(groupUpload.getUserid(), groupUpload.getName())) {
+		for(PadChannelBridge bridge : PadChannelBridgeHelper.getIns().getListPadChannelBridge(groupUpload.getUser().getUsername(), groupUpload.getGroupName())) {
 			List<Device> listDevice = new ArrayList<>();
 			for(Device oldDev : bridge.getListDevice()) {
 				Device dev = deviceService.findById(oldDev.getId());
@@ -187,7 +191,7 @@ public class DevGroupService {
 	}
 	
 	private void removeCacheDevice(Device device) {
-		cacheManager.getCache("device").evict(device.getId());
+//		cacheManager.getCache("device").evict(device.getId());
 		if(device instanceof DevHaveChild) {
 			for(Device d : ((DevHaveChild) device).getListDev()) {
 				removeCacheDevice(d);

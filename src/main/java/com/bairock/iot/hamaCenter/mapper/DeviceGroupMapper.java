@@ -12,6 +12,8 @@ public interface DeviceGroupMapper {
 
     List<DevGroup> findByUserId(Long userId);
 
+    DevGroup findByUserIdAndDevGroupNameAndDevGroupPassword(Long userId, String deviceGroupName, String deviceGroupPassword);
+
     DevGroup findByNameAndUserId(String groupName, Long userId);
 
     DevGroup findByNameAndPsdAndUserId(String groupName, String password, Long userId);

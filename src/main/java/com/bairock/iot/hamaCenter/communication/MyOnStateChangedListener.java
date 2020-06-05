@@ -1,18 +1,17 @@
 package com.bairock.iot.hamaCenter.communication;
 
+import com.bairock.iot.hamalib.communication.RefreshCollectorValueHelper;
+import com.bairock.iot.hamalib.device.CtrlModel;
+import com.bairock.iot.hamalib.device.Device;
+import com.bairock.iot.hamalib.device.devcollect.DevCollectClimateContainer;
+import com.bairock.iot.hamalib.order.DeviceOrder;
+import com.bairock.iot.hamalib.order.OrderType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.bairock.iot.hamaCenter.utils.Util;
 import com.bairock.iot.hamaCenter.data.webData.WebDevState;
 import com.bairock.iot.hamaCenter.service.DeviceBroadcastService;
-import com.bairock.iot.intelDev.communication.RefreshCollectorValueHelper;
-import com.bairock.iot.intelDev.device.CtrlModel;
-import com.bairock.iot.intelDev.device.Device;
-import com.bairock.iot.intelDev.device.Device.OnStateChangedListener;
-import com.bairock.iot.intelDev.device.devcollect.DevCollectClimateContainer;
-import com.bairock.iot.intelDev.order.DeviceOrder;
-import com.bairock.iot.intelDev.order.OrderType;
 
 /**
  * 设备状态改变事件监听器
@@ -21,7 +20,7 @@ import com.bairock.iot.intelDev.order.OrderType;
  *
  */
 @Component
-public class MyOnStateChangedListener implements OnStateChangedListener {
+public class MyOnStateChangedListener implements Device.OnStateChangedListener {
 
 	@Autowired
 	private DeviceBroadcastService deviceService;
@@ -31,7 +30,7 @@ public class MyOnStateChangedListener implements OnStateChangedListener {
 		Device superParent = dev.findSuperParent();
 //		if (dev instanceof IStateDev || dev instanceof DevCollect) {
 			// 通知网页
-			WebDevState webDevState = new WebDevState(dev.getLongCoding(), Integer.parseInt(dev.getDevState()));
+			WebDevState webDevState = new WebDevState(dev.getLongCoding(), Integer.parseInt(dev.getStatus()));
 			deviceService.broadcastStateChanged(superParent.getUsername(), superParent.getDevGroupName(), webDevState);
 			
 			//远程设备才发往本地, 本地设备状态在服务器收到之前已经到位了

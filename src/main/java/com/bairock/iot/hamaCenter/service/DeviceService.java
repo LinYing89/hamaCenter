@@ -34,7 +34,7 @@ public class DeviceService {
 		return deviceMapper.findById(id);
 	}
 
-	public List<Device> findDeviceByDevGroupId(String devGroupId){
+	public List<Device> findDeviceByDevGroupId(Long devGroupId){
 		List<Device> devices = deviceMapper.findByGroupId(devGroupId);
 		devices.forEach(device -> {
 			if(device instanceof DevHaveChild){

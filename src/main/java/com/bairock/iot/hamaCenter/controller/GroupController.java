@@ -2,22 +2,27 @@ package com.bairock.iot.hamaCenter.controller;
 
 import java.util.List;
 
+import com.bairock.iot.hamaCenter.exception.MyException;
+import com.bairock.iot.hamaCenter.utils.Result;
+import com.bairock.iot.hamaCenter.utils.ResultEnum;
+import com.bairock.iot.hamaCenter.utils.ResultUtil;
+import com.bairock.iot.hamalib.data.DevGroupLoginResult;
+import com.bairock.iot.hamalib.data.DragDevice;
+import com.bairock.iot.hamalib.device.Device;
+import com.bairock.iot.hamalib.device.devcollect.DevCollect;
+import com.bairock.iot.hamalib.user.DevGroup;
+import com.bairock.iot.hamalib.user.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import com.bairock.iot.hamaCenter.communication.PadChannelBridgeHelper;
 import com.bairock.iot.hamaCenter.service.DevGroupService;
 import com.bairock.iot.hamaCenter.service.DragConfigService;
 import com.bairock.iot.hamaCenter.service.DragDeviceService;
 
-@Controller
+@RestController
 @RequestMapping(value = "/group")
 public class GroupController {
 
@@ -29,10 +34,9 @@ public class GroupController {
     private DragConfigService dragConfigService;
 
     // 打开注册页面
-    @PostMapping("/add/{userid}")
-    public String addDevGroup(@PathVariable String userid, DevGroup group) {
-        devGroupService.addGroup(userid, group);
-        return "redirect:/loginSuccess";
+    @PostMapping("/add")
+    public Result<?> addDevGroup(@PathVariable String userid, DevGroup group) {
+        return ResultUtil.success(devGroupService.insert(group));
     }
 
     @PostMapping("/edit/{groupId}")
@@ -65,37 +69,28 @@ public class GroupController {
     @ResponseBody
     @GetMapping("/client/devGroupLogin/{userName}/{groupName}/{groupPsd}")
     public Result<DevGroupLoginResult> devGroupLogin(@PathVariable String userName, @PathVariable String groupName,
-            @PathVariable String groupPsd) throws Exception {
+                                                     @PathVariable String groupPsd) throws Exception {
         return devGroupService.devGroupLogin(userName, groupName, groupPsd);
     }
 
-    /**
-     * 客户端组登录
-     * 
-     * @param           loginModel, 登录模式,local本地, remote远程
-     * @param userName  用户名
-     * @param groupName 组名
-     * @param groupPsd  组密码
-     * @return
-     * @throws Exception
-     */
+    // 客户端组登录
     @ResponseBody
     @GetMapping("/client/devGroupLogin/{loginModel}/{userName}/{groupName}/{groupPsd}")
-    public Result<DevGroupLoginResult> devGroupLogin2(@PathVariable String loginModel, @PathVariable String userName,
+    public Result<?> devGroupLogin2(@PathVariable String loginModel, @PathVariable String username,
             @PathVariable String groupName, @PathVariable String groupPsd) throws Exception {
-        Result<DevGroupLoginResult> rs = devGroupService.devGroupLogin(userName, groupName, groupPsd);
-        // 如果登录成功
-        if (rs.getCode() == 0) {
-            if (loginModel.toLowerCase().equals("local")) {
-                // 本地登录, 查看本地是否已有登录, 如果已有, 不允许本地登录
-                boolean haved = PadChannelBridgeHelper.getIns().LocalLoginHaved(userName, groupName);
-                if (haved) {
-                    rs.setCode(ResultEnum.LOCAL_LOGIN_HAVED.getCode());
-                    rs.setMsg(ResultEnum.LOCAL_LOGIN_HAVED.getMessage());
-                }
+        DevGroup devGroup = devGroupService.findByUsernameAndDevGroupNameAndDevGroupPassword(username, groupName, groupPsd);
+        if(null == devGroup){
+            throw new MyException(ResultEnum.NO_ENTITY);
+        }
+
+        if (loginModel.toLowerCase().equals("local")) {
+            // 本地登录, 查看本地是否已有登录, 如果已有, 不允许本地登录
+            boolean haved = PadChannelBridgeHelper.getIns().LocalLoginHaved(username, groupName);
+            if (haved) {
+                throw new MyException("账号已在其他设备上登录");
             }
         }
-        return rs;
+        return ResultUtil.success(devGroup);
     }
 
     // 客户端组上传

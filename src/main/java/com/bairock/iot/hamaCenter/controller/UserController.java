@@ -1,21 +1,42 @@
 package com.bairock.iot.hamaCenter.controller;
 
+import com.bairock.iot.hamaCenter.exception.MyException;
+import com.bairock.iot.hamaCenter.service.UserService;
+import com.bairock.iot.hamaCenter.utils.Result;
+import org.apache.catalina.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.*;
 
 import com.bairock.iot.hamaCenter.data.UserAuthority;
-import com.bairock.iot.hamaCenter.repository.UserAuthorityRepo;
 
-@Controller
+@RestController
 @RequestMapping(value = "/user")
 public class UserController {
 
 	@Autowired
 	private UserAuthorityRepo userAuthorityRepo;
-	
+
+	@Autowired
+    private UserService userService;
+
+	@PostMapping("/add")
+    public Result<?> add(@ModelAttribute User user, @RequestParam String confirmPassword){
+	    if(StringUtils.isEmpty(user.getUsername())){
+	        throw new MyException("用户名不可为空");
+        }
+        if(StringUtils.isEmpty(user.getPassword())){
+            throw new MyException("密码不可为空");
+        }
+        if(StringUtils.isEmpty(confirmPassword)){
+            throw new MyException("确认密码不可为空");
+        }
+        if(!user.getPassword().equals(confirmPassword)){
+            throw new MyException("两次输入的密码不一致");
+        }
+    }
+
     //打开注册页面
     @GetMapping("/page/register")
     public String registerForm() {

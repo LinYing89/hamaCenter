@@ -46,6 +46,11 @@
         WHERE id = #{id}
     </select>
 
+    <select id="findIdByUsername" resultType="long">
+        SELECT id FROM user
+        WHERE username = #{username}
+    </select>
+
     <select id="findByUsername" resultMap="userMap">
         SELECT * FROM user
         WHERE

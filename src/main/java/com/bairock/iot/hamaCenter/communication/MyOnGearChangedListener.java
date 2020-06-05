@@ -1,17 +1,16 @@
 package com.bairock.iot.hamaCenter.communication;
 
+import com.bairock.iot.hamalib.device.Device;
+import com.bairock.iot.hamalib.device.Gear;
+import com.bairock.iot.hamalib.device.IStateDev;
+import com.bairock.iot.hamalib.order.DeviceOrder;
+import com.bairock.iot.hamalib.order.OrderType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.bairock.iot.hamaCenter.utils.Util;
 import com.bairock.iot.hamaCenter.data.webData.WebDevGear;
 import com.bairock.iot.hamaCenter.service.DeviceBroadcastService;
-import com.bairock.iot.intelDev.device.Device;
-import com.bairock.iot.intelDev.device.Device.OnGearChangedListener;
-import com.bairock.iot.intelDev.order.DeviceOrder;
-import com.bairock.iot.intelDev.order.OrderType;
-import com.bairock.iot.intelDev.device.Gear;
-import com.bairock.iot.intelDev.device.IStateDev;
 
 /**
  * 档位改变监听器
@@ -20,7 +19,7 @@ import com.bairock.iot.intelDev.device.IStateDev;
  *
  */
 @Component
-public class MyOnGearChangedListener implements OnGearChangedListener {
+public class MyOnGearChangedListener implements Device.OnGearChangedListener {
 
 	@Autowired
 	private DeviceBroadcastService deviceService;

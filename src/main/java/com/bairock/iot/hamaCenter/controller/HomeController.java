@@ -1,75 +1,59 @@
 package com.bairock.iot.hamaCenter.controller;
 
-import java.util.List;
-
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 
+import com.bairock.iot.hamaCenter.exception.MyException;
+import com.bairock.iot.hamaCenter.jwt.JwtUtil;
+import com.bairock.iot.hamaCenter.utils.Result;
+import com.bairock.iot.hamaCenter.utils.ResultEnum;
+import com.bairock.iot.hamaCenter.utils.ResultUtil;
+import com.bairock.iot.hamalib.user.User;
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.authc.AuthenticationException;
+import org.apache.shiro.authc.IncorrectCredentialsException;
+import org.apache.shiro.authc.LockedAccountException;
+import org.apache.shiro.authc.UsernamePasswordToken;
+import org.apache.shiro.subject.Subject;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.context.SecurityContextImpl;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.PostMapping;
 
-import com.bairock.iot.hamaCenter.service.DevGroupService;
 import com.bairock.iot.hamaCenter.service.UserService;
-import com.bairock.iot.intelDev.user.DevGroup;
-import com.bairock.iot.intelDev.user.User;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 public class HomeController {
 
 	@Autowired
 	private UserService userService;
-	@Autowired
-	private DevGroupService devGroupService;
-	
-	@RequestMapping(value= {"/", "/loginSuccess"})
-	public String loginSuccess(HttpServletRequest request, Model model) {
-		HttpSession session = request.getSession();
-		SecurityContextImpl securityContext = (SecurityContextImpl) session.getAttribute("SPRING_SECURITY_CONTEXT");
-		String name = ((UserDetails)securityContext.getAuthentication().getPrincipal()).getUsername();
-		if(name.equals("ggsb_public")) {
-			name = "ggsb";
-		}
-		User user = userService.findByUserid(name);
-		session.setAttribute("user", user);
-		List<DevGroup> list = devGroupService.findByUserid(name);
-		user.setListDevGroup(list);
-		model.addAttribute("user", user);
-		return "group/groupList";
-	}
-	
-	@GetMapping(value= {"/login"})
-	public String login() {
-		return "login";
-	}
-	
-//	@GetMapping(value = "/")
-//    public String hello(Model model, RedirectAttributes rmodel, @CookieValue(value="userId",required=false) String userId){
-//        if(null == userId || userId.isEmpty()){
-//            return gotoLogin(model);
-//        }
-//        Optional<User> optionalUser = userRepository.findById(Long.parseLong(userId));
-//        if(!optionalUser.isPresent()){
-//            return gotoLogin(model);
-//        }
-//
-//        User user = optionalUser.get();
-//        
-//        //为了使用缓存, 调用同一个方法获取的缓存对象才相同
-//        user = userRepository.findByName(user.getName());
-//        
-//        //重定向
-//        rmodel.addAttribute("userId", user.getId());
-//        rmodel.addFlashAttribute("user", user);
-//        return "redirect:/group/list/{userId}";
-//    }
 
-//    private String gotoLogin(Model model){
-//        model.addAttribute("registerUserHelper", new RegisterUserHelper());
-//        return "/login";
-//    }
+	@PostMapping
+	public Result<?> login(@RequestParam String username, @RequestParam(required = false) String password, HttpServletRequest request){
+		username = username.trim();
+		if(username.equals("ggsb_public")){
+			username = "ggsb";
+			password = "a123456";
+		}else if(StringUtils.isEmpty(password)){
+			throw new MyException("密码不可为空");
+		}
+		Subject subject = SecurityUtils.getSubject();
+		UsernamePasswordToken token = new UsernamePasswordToken(username, password);
+		try {
+			subject.login(token);
+			User user = userService.findByUsername(username);
+			String strToken = JwtUtil.sign(user.getId(), JwtUtil.SECRET);
+			return ResultUtil.success(strToken);
+		} catch (IncorrectCredentialsException e) {
+			throw new MyException(ResultEnum.PASSWORD_ERROR);
+		} catch (LockedAccountException e) {
+			throw new MyException(ResultEnum.USER_LOCKED);
+		} catch (AuthenticationException e) {
+			throw new MyException(ResultEnum.NO_USER);
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new MyException(e.getMessage());
+		}
+	}
+
 }

@@ -8,6 +8,8 @@ public interface UserMapper {
 
     User findById(Long userId);
 
+    Long findIdByUsername(String username);
+
     User findByUsername(String username);
 
     User findByUsernameAndPassword(String username, String password);

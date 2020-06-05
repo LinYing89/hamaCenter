@@ -4,38 +4,31 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.bairock.iot.hamaCenter.utils.Util;
+import com.bairock.iot.hamalib.communication.DevChannelBridge;
+import com.bairock.iot.hamalib.device.*;
+import com.bairock.iot.hamalib.device.devcollect.DevCollect;
+import com.bairock.iot.hamalib.device.devswitch.SubDev;
+import com.bairock.iot.hamalib.order.DeviceOrder;
+import com.bairock.iot.hamalib.order.LoginModel;
+import com.bairock.iot.hamalib.order.OrderBase;
+import com.bairock.iot.hamalib.order.OrderType;
+import com.bairock.iot.hamalib.user.DevGroup;
+import io.netty.buffer.Unpooled;
+import io.netty.channel.Channel;
+import io.netty.channel.group.ChannelGroup;
+import io.netty.channel.group.DefaultChannelGroup;
+import io.netty.util.concurrent.GlobalEventExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.bairock.iot.hamaCenter.utils.SpringUtil;
 import com.bairock.iot.hamaCenter.service.DevGroupService;
 import com.bairock.iot.hamaCenter.service.DeviceService;
-import com.bairock.iot.intelDev.communication.DevChannelBridge;
-import com.bairock.iot.intelDev.device.CtrlModel;
-import com.bairock.iot.intelDev.device.DevHaveChild;
-import com.bairock.iot.intelDev.device.DevStateHelper;
-import com.bairock.iot.intelDev.device.Device;
-import com.bairock.iot.intelDev.device.Gear;
-import com.bairock.iot.intelDev.device.IStateDev;
-import com.bairock.iot.intelDev.device.OrderHelper;
-import com.bairock.iot.intelDev.device.devcollect.DevCollect;
-import com.bairock.iot.intelDev.device.devswitch.SubDev;
-import com.bairock.iot.intelDev.order.DeviceOrder;
-import com.bairock.iot.intelDev.order.LoginModel;
-import com.bairock.iot.intelDev.order.OrderBase;
-import com.bairock.iot.intelDev.order.OrderType;
-import com.bairock.iot.intelDev.user.DevGroup;
-import com.bairock.iot.intelDev.user.Util;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import io.netty.buffer.Unpooled;
-import io.netty.channel.Channel;
-import io.netty.channel.group.ChannelGroup;
-import io.netty.channel.group.DefaultChannelGroup;
-import io.netty.util.concurrent.GlobalEventExecutor;
 
 public class PadChannelBridge {
 
@@ -52,6 +45,7 @@ public class PadChannelBridge {
 
 	private String userName = "";
 	private String groupName = "";
+	private Long userId;
 	// 是否需要向pad同步, true为需要, 当pad端无设备连接时, 为true, 当pad端有设备连接时为false, pad通过协议设置
 	public boolean synable = true;
 //	private DevGroup devGroup;
@@ -193,11 +187,11 @@ public class PadChannelBridge {
 				Device devParent = dev.findSuperParent();
 
                 if(!devParent.isNormal()){
-                    devParent.setDevStateId(DevStateHelper.DS_ZHENG_CHANG);
+                    devParent.setStatus(DevStateHelper.DS_ZHENG_CHANG);
                 }
                 
                 devParent.setCtrlModel(CtrlModel.LOCAL);
-				dev.setDevStateId(orderBase.getData());
+				dev.setStatus(orderBase.getData());
 				break;
 			case VALUE:
 				if (null == loginModel || !loginModel.equals(LoginModel.LOCAL)) {
@@ -209,7 +203,7 @@ public class PadChannelBridge {
 				if (null == dev || !(dev instanceof DevCollect)) {
 					return;
 				}
-				dev.setDevStateId(DevStateHelper.DS_ZHENG_CHANG);
+				dev.setStatus(DevStateHelper.DS_ZHENG_CHANG);
 				dev.setCtrlModel(CtrlModel.LOCAL);
 				((DevCollect) dev).getCollectProperty().setCurrentValue(Float.parseFloat(orderBase.getData()));
 				break;
@@ -350,7 +344,7 @@ public class PadChannelBridge {
 	private Device findDevByCoding(String coding) {
 		Device dev = findDevice(coding, listDevice);
 		if (null == dev) {
-			DevGroup group = devGroupService.findByNameAndUsername(groupName, userName);
+			DevGroup group = devGroupService.findByNameAndUserId(groupName, userId);
 			dev = findDevByCoding(coding, group);
 		}
 		return dev;
@@ -383,7 +377,7 @@ public class PadChannelBridge {
 	}
 
 	private void sendInitStateToPad() {
-		DevGroup group = devGroupService.findByNameAndUsername(groupName, userName);
+		DevGroup group = devGroupService.findByNameAndUserId(groupName, userId);
 		if (null == group) {
 			return;
 		}
@@ -402,7 +396,7 @@ public class PadChannelBridge {
 				devOrder = new DeviceOrder(OrderType.VALUE, dev.getId(), dev.getLongCoding(),
 						String.valueOf(((DevCollect) dev).getCollectProperty().getCurrentValue()));
 			} else {
-				devOrder = new DeviceOrder(OrderType.STATE, dev.getId(), dev.getLongCoding(), dev.getDevStateId());
+				devOrder = new DeviceOrder(OrderType.STATE, dev.getId(), dev.getLongCoding(), dev.getStatus());
 				if (dev instanceof IStateDev) {
 					// 发送档位
 					DeviceOrder devo = new DeviceOrder(OrderType.GEAR, dev.getId(), dev.getLongCoding(),
@@ -426,7 +420,7 @@ public class PadChannelBridge {
 	private void setDeviceListener(Device device) {
 
 		if (device.getStOnStateChangedListener().isEmpty()) {
-			device.setDevStateId(DevStateHelper.DS_UNKNOW);
+			device.setStatus(DevStateHelper.DS_UNKNOW);
 			device.addOnStateChangedListener(myOnStateChangedListener);
 		}
 		if (device.getStOnCtrlModelChanged().isEmpty()) {
@@ -525,7 +519,7 @@ public class PadChannelBridge {
 		if (null != loginModel && loginModel.equals(LoginModel.LOCAL)) {
 			for (Device dev : listDevice) {
 				if (dev.findSuperParent().getCtrlModel() == CtrlModel.LOCAL) {
-					dev.setDevStateId(DevStateHelper.DS_YI_CHANG);
+					dev.setStatus(DevStateHelper.DS_YI_CHANG);
 				}
 			}
 		}

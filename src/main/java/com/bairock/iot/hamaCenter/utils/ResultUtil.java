@@ -37,6 +37,13 @@ public class ResultUtil {
         return result;
     }
 
+    public static Result<?> error(String message){
+        Result<?> result = new Result<>();
+        result.setStatus(-1);
+        result.setMessage(message);
+        return result;
+    }
+
     public static Result<?> error(String message, Object object){
         Result<Object> result = new Result<>();
         result.setStatus(-1);

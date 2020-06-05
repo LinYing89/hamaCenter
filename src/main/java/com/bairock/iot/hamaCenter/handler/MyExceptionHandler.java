@@ -17,7 +17,7 @@ import javax.servlet.http.HttpServletResponse;
 @ControllerAdvice
 public class MyExceptionHandler {
 
-    private static Logger logger = LoggerFactory.getLogger(MyExceptionHandler.class);
+    private static final Logger logger = LoggerFactory.getLogger(MyExceptionHandler.class);
 
     @ExceptionHandler
     @ResponseBody
@@ -33,7 +33,7 @@ public class MyExceptionHandler {
             StackTraceElement[] stackTraceElements = exception.getStackTrace();
             if(stackTraceElements.length > 0) {
                 for(StackTraceElement s : stackTraceElements){
-                    if(s.getClassName().contains("com.shenyun")){
+                    if(s.getClassName().contains("com.bairock")){
                         message.append(s.getFileName()).append("-").append(s.getMethodName()).append("-").append(s.getLineNumber());
                         message.append('\n');
                     }

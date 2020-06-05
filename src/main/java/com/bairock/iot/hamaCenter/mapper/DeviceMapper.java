@@ -6,9 +6,11 @@ import java.util.List;
 
 public interface DeviceMapper {
 
+    int insert(Device device);
+
     Device findById(String id);
 
-    List<Device> findByGroupId(String devGroupId);
+    List<Device> findByGroupId(Long devGroupId);
 
     List<Device> findByPid(String pid);
 

@@ -40,6 +40,15 @@
         WHERE user_id = #{userId}
     </select>
 
+    <select id="findByUserIdAndDevGroupNameAndDevGroupPassword" resultMap="deviceGroupMap">
+        SELECT * FROM dev_group
+        WHERE user_id = #{userId}
+        AND
+        group_name = #{deviceGroupName}
+        AND
+        password = #{deviceGroupPassword}
+    </select>
+
     <select id="findByNameAndUserId" resultMap="deviceGroupMap">
         SELECT * FROM dev_group
         WHERE

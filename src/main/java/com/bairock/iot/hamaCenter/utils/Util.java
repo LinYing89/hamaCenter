@@ -1,8 +1,12 @@
 package com.bairock.iot.hamaCenter.utils;
 
-import com.bairock.iot.intelDev.order.OrderBase;
+import com.bairock.iot.hamaCenter.exception.MyException;
+import com.bairock.iot.hamaCenter.jwt.JwtUtil;
+import com.bairock.iot.hamalib.order.OrderBase;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import javax.servlet.http.HttpServletRequest;
 
 public class Util {
 	
@@ -16,6 +20,18 @@ public class Util {
 			e.printStackTrace();
 		}
 		return order;
+	}
+
+	public static Long getUserId(HttpServletRequest request){
+		String token = request.getHeader("token");
+		if(null == token){
+			throw new MyException(ResultEnum.TOKEN_NULL);
+		}
+		Long userId = JwtUtil.getUserId(token);
+		if(null == userId){
+			throw new MyException(ResultEnum.TOKEN_FORMAT_ERR);
+		}
+		return userId;
 	}
 	
 }
